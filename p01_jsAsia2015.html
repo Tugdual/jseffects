@@ -1,0 +1,149 @@
+<style>
+    #b {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, #456, #200);
+    }
+</style>
+<canvas id="b">
+<audio id="a"></audio>
+<script>
+    // Source : Mathieu 'p01' Henri: Making Realtime Audio-Visuals - JSConf.Asia 2015 
+    // Youtube : https://www.youtube.com/watch?v=16oLi1kvLHs
+    // Note : ne fonctionne pas sur FF
+c = b.getContext('2d');
+MAX = 24;   // Durée de l'animation en secondes
+// img = new Image();
+//img.src = 'sprite.png';
+//img.onload = function update() {
+onload = function update() {
+
+    requestAnimationFrame(update);
+
+    // Init
+    if (!window.time) {
+        time = 0;
+        frame = 0;
+        timeNextFrame = 0;
+        vines = [{x:0, y:0, a:0, ai:0, w:8, p:[], l:MAX*60}];   // * 60 pour passer en nb de frames
+        noteIndex = 0;
+        notesFreq = [155,195,261,155,233,155,195,207,195,
+            207,195,207,195,207,195,261,155,233,155,233,261,
+            155,233,155,233,155,233,168,155,195,261,195,207,
+            195,261,155,233,155,233,155,195,207,233,155,233,
+            155,195,207,195,207,233,261,155,233,261,233,261,
+            155,195,207,195,207,195,207,195,261,233,155,195,
+            207,233,261,233,155,233,261,155,195,207,195,261,
+            155,233,261,155,233,261,195,261,233,261,155,233,
+            155,195,207,233,261,233,155,195,261,233,155,195,
+            261,195,261,155,233,261,195,207,233,261,195,207,
+            195,261,233,155,195,261,155,195,207,195,261
+        ];
+        str = '';
+        s = !a.src;
+    }
+
+    // Màj temps
+    //currentTime = performance.now() / 1000; // Temps courant en secondes
+    currentTime = s ? MAX : a.currentTime;  // On se base sur l'audio
+    // Calcul du nb de frames écoulées entre deux appels
+    while (time < currentTime) {
+        // Ajout d'une puissance de 2 négative pour éviter les erreurs des floats
+        while (time < timeNextFrame) {
+            if (s) {    // Construction du soundbuffer
+                // Rapidité des notes : ralenti toutes les 8 secondes (time & 8)
+                frac = (time & 8 ? time * 6 : time / 4) % 1;
+                noteIndex += frac == 0;
+                v = (time * notesFreq[noteIndex & 127] % 1) * (1 - frac ) * (24 + 8 * Math.sin(time));
+                // & 127 --> pour boucler sur les notes
+                // % 1 --> pour avoir un signal en dent de scie (oscillateur)
+                // 1 - frac --> enveloppe du son, pour qu'il décroisse avec le temps
+                // 24 + 8 * Math.sin(time) --> volume variant suivant le temps
+
+                v += Math.sin(time * notesFreq[time >> 2] * Math.PI * 2) * 24
+                // Math.sin --> oscillateur sinusoïdal
+                // notesFreq[time >> 2] --> note suivante toutes les 4 secondes
+                // Pas d'enveloppe, le son est toujours là
+                // 24 --> Volume
+
+                str += String.fromCharCode(v + 127)
+            }
+            time += 1/16384;
+        }
+        frame ++;
+        timeNextFrame += 1/60;   // Cible : 60 frames par secondes
+
+        // Màj visuels
+        vines = vines.filter(v => v.l--);
+        vines.forEach(v => {
+            // Suppression des anciens points
+            v.p.splice(0, v.p.length - v.l);
+            v.p.splice(0, v.p.length - 60 * 5);
+            // Ajout d'un nouveau point
+            dx = Math.cos(v.a) * v.w / 2;
+            dy = Math.sin(v.a) * v.w / 2;
+            v.x += dx;
+            v.y += dy;
+            v.a += v.ai / v.w / 2;
+            v.p.push({x:v.x, y:v.y, dx:dx, dy:dy});
+            // Mise à jour de l'angle toutes les 30 frames
+            if (frame % 30 == 0) {
+                v.ai = Math.random() - 0.5;
+            }
+            // Ajout d'une nouvelle branche
+            if (v.w > 1 && Math.random() < v.l / 16384 / 2) {
+                vines.push({x:v.x, y:v.y, a:v.a, ai:v.ai, w:v.w/2, p:[], l:Math.min(v.l, 0 | v.w*32*(1+Math.random()))});
+            }
+        });
+    }
+
+    if (s) {
+        // Rendu de l'audio
+        a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAA'
+            + 'EAAAABA' // 16khz
+            + 'AAABAAgAZGF0YQAAAAAA' + btoa(str);
+        a.play();
+        time = 0;
+    } else {
+        // Rendu du visuel
+        // Définition de la taille du rendu pour éviter les pbs de viewport
+        H = b.height = 512;
+        W = b.width = 0 | H * innerWidth / innerHeight; // "0 |" permet de caster en interger
+
+        c.translate(W/2, H/2);
+        c.shadowBlur = 24;  // Blur pour donner du brillant
+        vines.forEach(v => {
+            //c.strokeStyle = '#fff';
+            // Couleur de l'ombre = couleur de dessin pour le brillant
+            c.shadowColor =
+            c.strokeStyle = 'hsl('+(v.a*60|0)+', 100%, '+(60+v.w*5)+'%)';
+            if (v.w == 8) { // On est sur la première de taille 8
+                // Dessin du sprite
+                /**c.rotate(v.a);  // Pour s'aligner sur la direction de la branche
+                c.drawImage(img,
+                    frame*4&112, 0, // Coordonnées de l'animation
+                    16, 24, // Taille du sprite
+                    -8, 0, // offset dest
+                    -16, -24    // Zone d'affichage
+                    )
+                c.rotate(-v.a);*/
+
+                c.translate(-v.x, -v.y);
+            }
+            c.beginPath();
+            l = v.p.length - 1;
+            //for (i = l; p = v.p[i]; i--) {
+            for (i = l; p = v.p[i]; i-=8) { // On n'utilise qu'un point sur 8
+                //c.lineTo(p.x, p.y);
+                e = i / l * 8; // On normalise la position du point dans la ligne (entre 0 et 8)
+                c.moveTo(p.x, p.y);
+                c.lineTo(p.x - e * p.dx, p.y - e * p.dy);   // la portion dessinée décroit suivant l'éloignement (on est centré sur la fin de la ligne)
+            }
+            c.stroke();
+        });
+    }
+}
+</script>
