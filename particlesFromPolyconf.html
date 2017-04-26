@@ -1,0 +1,83 @@
+<style>
+    #b {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, #456, #200);
+    }
+</style>
+<canvas id="b">
+<script>
+    c = b.getContext('2d');
+    N = 200;    // Nb particules
+    D = 10000;    // Distance max au carré
+    onload = function update() {
+        requestAnimationFrame(update);
+        // Ratio rendu
+        H = b.height = 1024;
+        W = b.width = 0 | H * innerWidth / innerHeight;
+
+        // Init
+        if(!window.time) {
+            time = 0;
+            frame = 0;
+            timeNextFrame = 0;
+            p=[];
+            i=N;
+            while(i--) {
+                p.push({x:W*Math.random(), y:H*Math.random(), vx:2.5-5*Math.random(), vy:2.5-5*Math.random(), r:4*Math.random()});
+            }
+        }
+
+        // Synchro
+        currentTime = performance.now() / 1000;
+        while (time < currentTime) {
+            while (time < timeNextFrame) {  // calcul du temps jusqu'auquel il faut attendre pour la frame suivante
+                time += 1/16384;
+            }
+            frame++;
+            timeNextFrame += 1/60;  // 60 frames par seconde
+            // Màj scene
+            //p.forEach(q=>{
+            for (i=p.length;i>0;i--) {
+                q=p[i-1];
+                q.x+=q.vx;
+                q.y+=q.vy;
+                if (q.x >= W) {q.x -= W}
+                else if (q.x < 0) {q.x += W}
+                if (q.y >= H) {q.y -= H}
+                else if (q.y < 0) {q.y += H}
+            //});
+            }
+        }
+
+        // Rendu
+        /*c.shadowBlur = 24;
+        c.shadowColor = '#b0c0ff';*/
+        //c.fillStyle = c.strokeStyle = '#b0c0ff';
+        c.fillStyle = 'rgba(176,192,255,1)';//#b0c0ff
+        c.lineWidth = 1;
+        for (i=p.length;i>0;i--) {
+            q=p[i-1];
+        //p.forEach((q,i)=>{
+            c.beginPath();
+            c.arc(q.x,q.y,q.r,0,2*Math.PI);
+            c.fill();
+            for (j=i;j<p.length;j++) {
+                dx = q.x - p[j].x;
+                dy = q.y - p[j].y;
+                d = dx*dx+dy*dy;
+                if (d < D) {
+                    c.beginPath();
+                    c.moveTo(q.x, q.y);
+                    c.lineTo(p[j].x, p[j].y);
+                    c.strokeStyle = 'rgba(176,192,255,'+((D-d)/D)+')';
+                    c.stroke();
+                }
+            }
+        //});
+        }
+    }
+</script>
