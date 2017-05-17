@@ -42,7 +42,6 @@
             frame++;
             timeNextFrame += 1/60;  // 60 frames par seconde
             // Màj scene
-            //p.forEach(q=>{
             for (i=p.length;i>0;i--) {
                 q=p[i-1];
                 q.x+=q.vx;
@@ -51,7 +50,6 @@
                 else if (q.x < 0) {q.x += W}
                 if (q.y >= H) {q.y -= H}
                 else if (q.y < 0) {q.y += H}
-            //});
             }
         }
 
@@ -63,7 +61,6 @@
         c.lineWidth = 1;
         for (i=p.length;i>0;i--) {
             q=p[i-1];
-        //p.forEach((q,i)=>{
             c.beginPath();
             c.arc(q.x,q.y,q.r,0,2*Math.PI);
             c.fill();
@@ -79,7 +76,6 @@
                     c.stroke();
                 }
             }
-        //});
         }
     
         var t1 = performance.now();

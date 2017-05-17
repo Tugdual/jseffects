@@ -9,3 +9,7 @@ These effects are not clean code since it's only done for small duration, so it 
 ## Performance hint
 
 [Source for performance measuring](https://www.sitepoint.com/measuring-javascript-functions-performance/)
+
+Global time measurment (update and drawing scene) :
+
+- Use of forEach : replace `forEach` by `for` (median time drop from 6s to 5s).
