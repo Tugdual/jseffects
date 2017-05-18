@@ -22,14 +22,14 @@
         W = b.width = 0 | H * innerWidth / innerHeight;
 
         // Init
-        if(!window.time) {
+        if (!window.time) {
             time = 0;
             frame = 0;
             timeNextFrame = 0;
-            p=[];
-            i=N;
-            while(i--) {
-                p.push({x:W*Math.random(), y:H*Math.random(), vx:0.5-Math.random(), vy:0.5-Math.random(), r:4*Math.random()});
+            p = [];
+            i = N;
+            while (i--) {
+                p.push({x:W * Math.random(), y:H * Math.random(), vx:0.5 - Math.random(), vy:0.5 - Math.random(), r:4 * Math.random()});
             }
         }
 
@@ -42,10 +42,10 @@
             frame++;
             timeNextFrame += 1/60;  // 60 frames par seconde
             // Màj scene
-            for (i=p.length;i>0;i--) {
-                q=p[i-1];
-                q.x+=q.vx;
-                q.y+=q.vy;
+            for (i = p.length; i > 0; i--) {
+                q = p[i-1];
+                q.x += q.vx;
+                q.y += q.vy;
                 if (q.x >= W) {q.x -= W}
                 else if (q.x < 0) {q.x += W}
                 if (q.y >= H) {q.y -= H}
@@ -59,20 +59,20 @@
         //c.fillStyle = c.strokeStyle = '#b0c0ff';
         c.fillStyle = 'rgba(176,192,255,1)';//#b0c0ff
         c.lineWidth = 1;
-        for (i=p.length;i>0;i--) {
-            q=p[i-1];
+        for (i = p.length; i > 0; i--) {
+            q = p[i-1];
             c.beginPath();
-            c.arc(q.x,q.y,q.r,0,2*Math.PI);
+            c.arc(q.x, q.y, q.r, 0, 2 * Math.PI);
             c.fill();
-            for (j=i;j<p.length;j++) {
+            for (j = i; j < p.length; j++) {
                 dx = q.x - p[j].x;
                 dy = q.y - p[j].y;
-                d = dx*dx+dy*dy;
+                d = dx * dx + dy * dy;
                 if (d < D) {
                     c.beginPath();
                     c.moveTo(q.x, q.y);
                     c.lineTo(p[j].x, p[j].y);
-                    c.strokeStyle = 'rgba(176,192,255,'+((D-d)/D)+')';
+                    c.strokeStyle = 'rgba(176,192,255,' + ((D - d) / D) + ')';
                     c.stroke();
                 }
             }
